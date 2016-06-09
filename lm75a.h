@@ -64,8 +64,8 @@ typedef enum{
 *	- LOW
 */
 typedef enum{
-	LM75A_0S_PIN_ACTIVE_L = 0x00,	// OS pin is active low
-	LM75A_0S_PIN_ACTIVE_H = 0x01	// OS pin is actve high
+	LM75A_OS_PIN_ACTIVE_L = 0x00,	// OS pin is active low
+	LM75A_OS_PIN_ACTIVE_H = 0x01	// OS pin is actve high
 }lm75a_os_pin_active_state_e;
 
 /**
@@ -78,27 +78,25 @@ typedef enum{
 	LM75A_OS_QV6 = 0x03		// Queue value 6
 }lm75a_os_queue_value_e;
 
+/*
+* LM75A set-point enumeration
+*/
+typedef enum{
+	LM75A_T_O = 0x00,	// Overtemperature set-point
+	LM75A_T_H = 0x01	// Hysteresis set-point
+}lm75a_setpoint_e;
+
 /*===========================================================================*/
 /* Driver macros.                                                            */
 /*===========================================================================*/
 
 // LM75A Address
-#define LM75A_ADDR ((uint8_t)0x48)
-
+#define LM75A_ADDR		((uint8_t)0x48)	// Adresse of the sensor
 // LM75A Register list
 #define LM75A_C_REG		((uint8_t)0x01) // Configuration register
 #define LM75A_T_REG		((uint8_t)0x00)	// Temperature register
 #define LM75A_H_REG		((uint8_t)0x02)	// Hysteresis register
 #define LM75A_O_REG		((uint8_t)0x03)	// Overtemperature shutdown register
-
-/*
-// Pointer Register(reg)
-#define LM75A_T_PTR_REG	((uint8_t)0x00)	// Temp pointer reg
-#define LM75A_C_PTR_REG	((uint8_t)0x01) // Config pointer reg
-#define LM75A_H_PTR_REG ((uint8_t)0x02)	// Hysteresis pointer reg
-#define LM75A_O_PTR_REG	((uint8_t)0x03)	// Overtemperature shutdown pointer reg
-*/
-// Coefficient for temperature conversion
 
 /*===========================================================================*/
 /* External declarations.                                                    */
@@ -108,6 +106,12 @@ typedef enum{
 /* Functions.                   			                                 */
 /*===========================================================================*/
 float lm75aReadTemperature(void);
-float lm75aReadOvertemperature(void);
+float lm75aReadSetpoint(uint8_t setpoint);
+uint8_t lm75aReadConfiguration(void);
+void lm75aWriteConfiguration(uint8_t config);
+void lm75aConfigOSFaultQueue(uint8_t queueValue);
+void lm75aConfigOSPolarity(uint8_t state);
+void lm75aConfigOSOperationMode(uint8_t pinMode);
+void lm75aConfigPowerMode(uint8_t powerMode);
 
 #endif // _LM75A_H_

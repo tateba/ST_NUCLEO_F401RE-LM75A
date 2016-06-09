@@ -43,6 +43,8 @@
 //=============================================================================
 float temp;
 float overtemperature;
+float thysteresis;
+uint8_t config;
 
 BaseSequentialStream* chp = (BaseSequentialStream*) &SD2;
 
@@ -101,14 +103,23 @@ int main(void){
 
 	// Create the thread for the LED.
 	chThdCreateStatic(waLedGreenThread, sizeof(waLedGreenThread), LOWPRIO, BlinkThread, NULL);
-	
+
+	lm75aConfigPowerMode(LM75A_POWER_MODE_N); // Put the sensor in Wake/Sleep mode
+	lm75aConfigOSOperationMode(LM75A_OS_PIN_I); // Config the OS Pin in Comparator/Interrupt mode
+	lm75aConfigOSFaultQueue(LM75A_OS_QV6);
+	lm75aConfigOSPolarity(LM75A_OS_PIN_ACTIVE_H);
+
 	while (true){
 		temp = lm75aReadTemperature();
-		overtemperature = lm75aReadOvertemperature();
+		overtemperature = lm75aReadSetpoint(LM75A_T_O);
+		thysteresis = lm75aReadSetpoint(LM75A_T_H);
+		config = lm75aReadConfiguration();
 		
 		chprintf(chp, "\n\r LM75A measurement:");
-		chprintf(chp, "\n\r   Temperature: %.3f °c\n\r", temp);
-		chprintf(chp, "\n\r   Overtemperature: %.3f °c\n\r", overtemperature);
+		chprintf(chp, "\n\r   Temperature: %.3f °c", temp);
+		chprintf(chp, "\n\r   Overtemperature: %.3f °c", overtemperature);
+		chprintf(chp, "\n\r   Thysteresis: %.3f °c", thysteresis);
+		chprintf(chp, "\n\r   Configuration register: %x\n\r", config);
 		chThdSleepMilliseconds(1000);
 		chprintf(chp, "\033[2J\033[1;1H");
   }
