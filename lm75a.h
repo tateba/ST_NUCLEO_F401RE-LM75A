@@ -108,5 +108,6 @@ typedef enum{
 /* Functions.                   			                                 */
 /*===========================================================================*/
 float lm75aReadTemperature(void);
+float lm75aReadOvertemperature(void);
 
 #endif // _LM75A_H_

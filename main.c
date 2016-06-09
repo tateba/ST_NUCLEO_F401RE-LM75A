@@ -42,6 +42,7 @@
 // Global variables, I2C TX and RX buffers, I2C and Serial Configurations
 //=============================================================================
 float temp;
+float overtemperature;
 
 BaseSequentialStream* chp = (BaseSequentialStream*) &SD2;
 
@@ -103,9 +104,11 @@ int main(void){
 	
 	while (true){
 		temp = lm75aReadTemperature();
+		overtemperature = lm75aReadOvertemperature();
 		
 		chprintf(chp, "\n\r LM75A measurement:");
 		chprintf(chp, "\n\r   Temperature: %.3f °c\n\r", temp);
+		chprintf(chp, "\n\r   Overtemperature: %.3f °c\n\r", overtemperature);
 		chThdSleepMilliseconds(1000);
 		chprintf(chp, "\033[2J\033[1;1H");
   }

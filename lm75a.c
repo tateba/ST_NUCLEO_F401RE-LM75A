@@ -28,23 +28,17 @@
 float lm75aReadTemperature(void){
 	uint16_t temp;
 	uint16_t mask = 0x07FF; // For the 2 complement.
-	uint8_t txbuf[2];
+	uint8_t txbuf;
 	uint8_t rxbuf[2];
 	float temperature;
 
-	txbuf[0] = LM75A_T_REG;
+	txbuf = LM75A_T_REG;
 
 	// Read from I2C BUS
 	i2cAcquireBus(&I2CD1);
-	i2cMasterTransmitTimeout(&I2CD1, LM75A_ADDR, txbuf, 1, rxbuf, 2,
+	i2cMasterTransmitTimeout(&I2CD1, LM75A_ADDR, &txbuf, 1, rxbuf, 2,
 			MS2ST(10));
 	i2cReleaseBus(&I2CD1);
-
-	//chThdSleepMillis(50);
-
-	// Just for the test:
-	//rxbuf[0] = 0x3F;
-	//rxbuf[1] = 0xC9;
 
 	// Get all the 16bits read from the sensor
 	temp = (rxbuf[0] << 8) + rxbuf[1];
@@ -62,10 +56,32 @@ float lm75aReadTemperature(void){
 }
 
 /**
-*
+* @fn		flaot lm75aReadOvertemperature
+* @brief	Read the Overtemperature shutdown threshold
+* @return	the user define high limit temperature
 */
 float lm75aReadOvertemperature(void){
-	return 80.0;
+	uint16_t setpoint;
+	uint16_t mask = 0x01FF;
+	uint8_t txbuf[2];
+	uint8_t rxbuf[2];
+	float overtemp;
+
+	txbuf[0] = LM75A_O_REG;
+	i2cAcquireBus(&I2CD1);
+	i2cMasterTransmitTimeout(&I2CD1, LM75A_ADDR, txbuf, 1, rxbuf, 2,
+			MS2ST(4));
+	i2cReleaseBus(&I2CD1);
+
+	setpoint = (rxbuf[0] << 8) + rxbuf[1];
+	setpoint = setpoint >> 7; // Just keep the 9 MSB bits over the 16 bits.
+
+	if(!(setpoint &(1u < 8)))
+		overtemp = setpoint * 0.5;
+	else
+		overtemp = -((((~setpoint)&mask) + 1) * 0.5);
+
+	return overtemp;
 }
 
 /**
