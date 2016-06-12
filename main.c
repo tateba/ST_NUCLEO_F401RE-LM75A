@@ -49,13 +49,17 @@ uint8_t config;
 BaseSequentialStream* chp = (BaseSequentialStream*) &SD2;
 
 /**
-* I2C Configuration structure
-*/
+ * I2C Configuration structure
+ */
 static const I2CConfig i2cConfig = {
 	OPMODE_I2C,			// I2C Operation mode
 	400000,				// I2C Clock speed
 	FAST_DUTY_CYCLE_2,	// I2C Duty cycle mode
 };
+
+/**
+ * 
+ */
 
 //=============================================================================
 // Functions
@@ -104,10 +108,10 @@ int main(void){
 	// Create the thread for the LED.
 	chThdCreateStatic(waLedGreenThread, sizeof(waLedGreenThread), LOWPRIO, BlinkThread, NULL);
 
-	lm75aConfigPowerMode(LM75A_POWER_MODE_N); // Put the sensor in Wake/Sleep mode
-	lm75aConfigOSOperationMode(LM75A_OS_PIN_I); // Config the OS Pin in Comparator/Interrupt mode
-	lm75aConfigOSFaultQueue(LM75A_OS_QV6);
-	lm75aConfigOSPolarity(LM75A_OS_PIN_ACTIVE_H);
+	lm75aConfigPowerMode(LM75A_PMN);
+	lm75aConfigOSOperationMode(LM75A_OS_IPM);
+	lm75aConfigOSFaultQueue(LM75A_OS_FQV6);
+	lm75aConfigOSPolarity(LM75A_OS_PAH);
 
 	while (true){
 		temp = lm75aReadTemperature();
