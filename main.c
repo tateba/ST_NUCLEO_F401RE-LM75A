@@ -16,16 +16,16 @@
 
 /**
  *
- * @file	main.c
+ * @file		main.c
  *
- * @brief	Use the BMP085 library to mesure the temperature and the pressure 
- *			with the Bosch Digital pressure sensor.
+ * @brief		Use the BMP085 library to mesure the temperature and the pressure 
+ *					with the Bosch Digital pressure sensor.
  *
  * @author	Theodore ATEBA
  *
  * @version 1.0
  *
- * @date 	14  May 2016
+ * @date		14  May 2016
  *
  */
 
@@ -52,9 +52,9 @@ BaseSequentialStream* chp = (BaseSequentialStream*) &SD2;
  * I2C Configuration structure
  */
 static const I2CConfig i2cConfig = {
-	OPMODE_I2C,			// I2C Operation mode
-	400000,				// I2C Clock speed
-	FAST_DUTY_CYCLE_2,	// I2C Duty cycle mode
+	OPMODE_I2C,					/* I2C Operation mode		*/
+	400000,							/* I2C Clock speed			*/
+	FAST_DUTY_CYCLE_2,	/* I2C Duty cycle mode	*/
 };
 
 /**
@@ -79,39 +79,69 @@ static THD_FUNCTION(BlinkThread, arg){
 
 
 /**
-* @fn       int main(void)
-* @brief    Application entry point.
-*/
+ * @fn		int main(void)
+ * @brief	Application entry point.
+ */
 int main(void){
+	bool delay = false;
+	float hyst = -5.0;
+	float over = -10.0;
+
 	/*
-	* System initializations.
-   	* - HAL initialization, this also initializes the configured device drivers
-   	*   and performs the board-specific initializations.
-   	* - Kernel initialization, the main() function becomes a thread and the
-   	*   RTOS is active.
-   	*/
+	 * System initializations.
+   * - HAL initialization, this also initializes the configured device drivers
+   *   and performs the board-specific initializations.
+   * - Kernel initialization, the main() function becomes a thread and the
+   *   RTOS is active.
+   */
 	halInit();
 	chSysInit();
   
 	/*
-	* Start Serial driver
-	*/
+	 * Start Serial driver
+	 */
 	sdStart(&SD2, NULL);
 	
 	/*
-	* Configure the I2C Driver and i2C Pins  
-	*/
-    i2cStart(&I2CD1, &i2cConfig);	
-    palSetPadMode(GPIOB, 8, PAL_MODE_ALTERNATE(4) | PAL_STM32_OTYPE_OPENDRAIN); // SCL
-    palSetPadMode(GPIOB, 9, PAL_MODE_ALTERNATE(4) | PAL_STM32_OTYPE_OPENDRAIN); // SDA
+	 * Configure the I2C Driver and i2C Pins  
+	 */
+	i2cStart(&I2CD1, &i2cConfig);	
+	palSetPadMode(GPIOB, 8, PAL_MODE_ALTERNATE(4) | PAL_STM32_OTYPE_OPENDRAIN); // SCL
+	palSetPadMode(GPIOB, 9, PAL_MODE_ALTERNATE(4) | PAL_STM32_OTYPE_OPENDRAIN); // SDA
 
 	// Create the thread for the LED.
 	chThdCreateStatic(waLedGreenThread, sizeof(waLedGreenThread), LOWPRIO, BlinkThread, NULL);
 
-	lm75aConfigPowerMode(LM75A_PMN);
-	lm75aConfigOSOperationMode(LM75A_OS_IPM);
-	lm75aConfigOSFaultQueue(LM75A_OS_FQV6);
-	lm75aConfigOSPolarity(LM75A_OS_PAH);
+	if(!lm75aConfigPowerMode(LM75A_PMN)){
+		chprintf(chp, "\n\r LM75A Power Mode Configuration error!");
+		delay = true;
+	}
+
+	if(!lm75aConfigOSOperationMode(LM75A_OS_IPM)){
+		chprintf(chp, "\n\r LM75A OS Operation Mode configuration erro!");
+		delay = true;
+	}
+		
+	if(!lm75aConfigOSFaultQueue(LM75A_OS_FQV6)){
+		chprintf(chp, "\n\r LM75A OS Fault queue programming configuration error!");
+		delay = true;
+	}
+
+	if(!lm75aConfigOSPolarity(LM75A_OS_PAH)){
+		chprintf(chp, "\n\r LM75A OS pin polarity Configuration error!");
+		delay = true;
+	}
+
+	if(!lm75aWriteSetpoint(LM75A_T_H, hyst)){
+		chprintf(chp, "\n\r LM75A Setpoint Configuration error!");
+		delay = true;
+		chprintf(chp, "\n\r return false");
+	}
+	else
+		chprintf(chp, "\n\r return true");
+
+	if(delay)
+		chThdSleepMilliseconds(5000);
 
 	while (true){
 		temp = lm75aReadTemperature();
@@ -119,11 +149,32 @@ int main(void){
 		thysteresis = lm75aReadSetpoint(LM75A_T_H);
 		config = lm75aReadConfiguration();
 		
+		if(!lm75aWriteSetpoint(LM75A_T_H, hyst)){
+			chprintf(chp, "\n\r LM75A Hysteresis Configuration error!");
+		}
+		
+		if(!lm75aWriteSetpoint(LM75A_T_O, over)){
+			chprintf(chp, "\n\r LM75A Overtemperature Configuration error!");
+		}
+		
+		//thysteresis = lm75aReadSetpoint(LM75A_T_H);
+
 		chprintf(chp, "\n\r LM75A measurement:");
 		chprintf(chp, "\n\r   Temperature: %.3f °c", temp);
 		chprintf(chp, "\n\r   Overtemperature: %.3f °c", overtemperature);
 		chprintf(chp, "\n\r   Thysteresis: %.3f °c", thysteresis);
+		//chprintf(chp, "\n\r   Hyst config: %.3f °c", hyst);
 		chprintf(chp, "\n\r   Configuration register: %x\n\r", config);
+		
+		hyst += 1;
+		over += 2;
+		
+		if(over >= 10)
+			over = -10;
+
+		if(hyst >= 5.0)
+			hyst = -5.0;
+
 		chThdSleepMilliseconds(1000);
 		chprintf(chp, "\033[2J\033[1;1H");
   }
