@@ -44,9 +44,9 @@
  *	- Shutdown: Temperature measurement is desabled, sensor in sleep mode
  */
 typedef enum{
-	LM75A_PMN = 0x00,	/**< Power Mode Normal																	*/
-	LM75A_PMS = 0x01	/**< Power Mode Shutdown																*/
-}lm75a_om_e;				/**< Device Operation Mode															*/
+	LM75A_PMN = 0x00, /**< Power Mode Normal                                  */
+	LM75A_PMS = 0x01  /**< Power Mode Shutdown                                */
+}lm75a_om_e;        /**< Device Operation Mode                              */
 
 /**
  * @brief LM75A OS Output Pin Mode:
@@ -54,9 +54,9 @@ typedef enum{
  *	- Interrupt
  */
 typedef enum{
-	LM75A_OS_CPM = 0x00,	/**< OS Comparator Pin Mode													*/
-	LM75A_OS_IPM = 0x01		/**< OS Interrupt Pin Mode													*/
-}lm75a_os_opm_e;				/**< Device OS Output Pin Mode											*/
+	LM75A_OS_CPM = 0x00,  /**< OS Comparator Pin Mode                         */
+	LM75A_OS_IPM = 0x01   /**< OS Interrupt Pin Mode                          */
+}lm75a_os_opm_e;        /**< Device OS Output Pin Mode                      */
 
 /**
  * @brief LM75A OS Pin Active State:
