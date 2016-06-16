@@ -1,5 +1,5 @@
 *****************************************************************************
-** ChibiOS/HAL + ChibiOS/EX - I2C + BMP085 demo for STM32F4xxxx.		   **
+** ChibiOS/HAL + ChibiOS/EX - I2C + LM75A demo for STM32F4xxxx.						 **
 *****************************************************************************
 
 ** TARGET **
@@ -8,7 +8,7 @@ The demo runs on an STM32F401RE Nucleo board.
 
 ** The Demo **
 
-The demo flashes the board LED using the main loop, read data from BMP085
+The demo flashes the board LED using the main loop, read data from LM75A
 printing it on a BaseSequentialStream (SD2, mapped on USB virtual COM port).
 
 ** Build Procedure **
