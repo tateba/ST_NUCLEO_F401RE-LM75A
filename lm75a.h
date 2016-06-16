@@ -96,15 +96,15 @@ typedef struct{
   lm75a_os_fqv_e  os_fqv; /**< OS Fault Queue Value: 1/2/4/6                */
   float           tos;    /**< overtemperature set point: 80°c default      */
   float           thyst;  /**< Hysteresis set point                         */
-}LM75ATherConfig;					/**< LM75A Thermometer Configuration              */
+}LM75ATherConfig;         /**< LM75A Thermometer Configuration              */
 
 /**
  * @brief LM75A Driver State machine possible states.
  */
 typedef enum{
-  LM75A_UNINIT	= 0,  /**< Not initialized                                  */
-  LM75A_STOP		= 1,  /**< Stopped                                          */
-  LM75A_READY		= 2   /**< Ready                                            */
+  LM75A_UNINIT  = 0,  /**< Not initialized                                  */
+  LM75A_STOP    = 1,  /**< Stopped                                          */
+  LM75A_READY   = 2   /**< Ready                                            */
 }lm75a_state_e;       /**< LM75A State machine enumeration type             */
 
 /**
@@ -138,15 +138,14 @@ typedef struct{
 #define LM75A_C_REG	((uint8_t)0x01) /**< LM75A Configuration register       */
 #define LM75A_T_REG	((uint8_t)0x00) /**< LM75A Temperature register         */
 #define LM75A_H_REG	((uint8_t)0x02) /**< LM75A Hysteresis register          */
-#define LM75A_O_REG	((uint8_t)0x03) /**< LM75A Overtemperature shutdown 
-                                      register                              */
+#define LM75A_O_REG	((uint8_t)0x03) /**< LM75A Overtemp shutdown register   */
 
 /*===========================================================================*/
 /* External declarations.                                                    */
 /*===========================================================================*/
 
 /*===========================================================================*/
-/* Functions.                   			                                 */
+/* Functions.                                                                */
 /*===========================================================================*/
 float   lm75aReadTemperature (void);
 float   lm75aReadSetpoint (uint8_t setpoint);
