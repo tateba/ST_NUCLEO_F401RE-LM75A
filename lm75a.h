@@ -40,8 +40,8 @@
 
 /**
  * @brief LM75A Operation Mode:
- *	- Normal: conversion every 100ms, this is the default mode
- *	- Shutdown: Temperature measurement is desabled, sensor in sleep mode
+ *  - Normal: conversion every 100ms, this is the default mode
+ *  - Shutdown: Temperature measurement is desabled, sensor in sleep mode
  */
 typedef enum{
   LM75A_PMN = 0x00, /**< Power Mode Normal                                  */
@@ -50,8 +50,8 @@ typedef enum{
 
 /**
  * @brief LM75A OS Output Pin Mode:
- *	- Comparator
- *	- Interrupt
+ *  - Comparator
+ *  - Interrupt
  */
 typedef enum{
   LM75A_OS_CPM = 0x00,  /**< OS Comparator Pin Mode                         */
@@ -60,8 +60,8 @@ typedef enum{
 
 /**
  * @brief LM75A OS Pin Active State:
- *	- HIGH
- *	- LOW
+ *  - HIGH
+ *  - LOW
  */
 typedef enum{
   LM75A_OS_PAL = 0x00,  /**< OS Pin Active Low                              */
@@ -125,8 +125,8 @@ typedef struct LM75ADriver LM75ADriver;
  *
  *//*
 typedef struct{
-	lm75a_state_e	state;
-	LM75AConfig		config;
+  lm75a_state_e	state;
+  LM75AConfig		config;
 }LM75ADriver;
 */
 

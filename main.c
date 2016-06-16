@@ -18,10 +18,10 @@
  *
  * @file    main.c
  *
- * @brief   Use the BMP085 library to mesure the temperature and the pressure
- *          with the Bosch Digital pressure sensor.
+ * @brief   Use the LM75A library to mesure the temperature of the Digital
+ *          NXP temperature sensor.
  *
- * @author  Theodore ATEBA
+ * @author  Theodore Ateba
  *
  * @version 1.0
  *
@@ -95,7 +95,7 @@ int main(void){
   /* Start Serial driver */
   sdStart(&SD2, NULL);
 	
-	/* Configure the I2C Driver and i2C Pins */
+  /* Configure the I2C Driver and i2C Pins */
   i2cStart(&I2CD1, &i2cConfig);
   palSetPadMode(GPIOB, 8, PAL_MODE_ALTERNATE(4) | PAL_STM32_OTYPE_OPENDRAIN); // SCL
   palSetPadMode(GPIOB, 9, PAL_MODE_ALTERNATE(4) | PAL_STM32_OTYPE_OPENDRAIN); // SDA
