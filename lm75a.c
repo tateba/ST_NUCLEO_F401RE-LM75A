@@ -21,74 +21,74 @@
 #include "lm75a.h"
 
 /**
- * @fn			float lm75aReadTemperature(void)
- * @brief		Read the LM75A temperature register.
+ * @fn      float lm75aReadTemperature(void)
+ * @brief   Read the LM75A temperature register.
  *
- * @return	The temperature measured by the LM75A sensor.
+ * @return  The temperature measured by the LM75A sensor.
  */
 float lm75aReadTemperature(void){
-	uint16_t	temp;
-	uint16_t	mask = 0x07FF;
-	uint8_t		txbuf;
-	uint8_t		rxbuf[2];
-	msg_t			msg;
-
-	txbuf = LM75A_T_REG;
-
-	i2cAcquireBus(&I2CD1);
-	msg = i2cMasterTransmitTimeout(&I2CD1, LM75A_ADDR, &txbuf, 1, rxbuf, 2,
-			MS2ST(4));
-	i2cReleaseBus(&I2CD1);
-
-	if(msg == MSG_OK){
-		temp = (rxbuf[0] << 8) + rxbuf[1];
-		temp = temp >> 5;
-	
-		if(!(temp & (1 << 10)))
-			return (float)(temp * 0.125);
-		else
-			return (float)(-((((~temp)&mask) + 1) * 0.125));
-	}
-	else
-		return 255.0;
+  uint16_t  temp;
+  uint16_t  mask = 0x07FF;
+  uint8_t   txbuf;
+  uint8_t   rxbuf[2];
+  msg_t     msg;
+  
+  txbuf = LM75A_T_REG;
+  
+  i2cAcquireBus(&I2CD1);
+  msg = i2cMasterTransmitTimeout(&I2CD1, LM75A_ADDR, &txbuf, 1, rxbuf, 2,
+      MS2ST(4));
+  i2cReleaseBus(&I2CD1);
+  
+  if(msg == MSG_OK){
+    temp = (rxbuf[0] << 8) + rxbuf[1];
+    temp = temp >> 5;
+    
+    if(!(temp & (1 << 10)))
+      return (float)(temp * 0.125);
+    else
+      return (float)(-((((~temp)&mask) + 1) * 0.125));
+  }
+  else
+    return 255.0;
 }
 
 /**
- * @fn			float lm75aReadSetpoint(uint8_t setpoint)
- * @brief		Read the Overtemperature shutdown threshold.
+ * @fn      float lm75aReadSetpoint(uint8_t setpoint)
+ * @brief   Read the Overtemperature shutdown threshold.
  *
- * @return	The user define high limit temperature.
+ * @return  The user define high limit temperature.
  */
 float lm75aReadSetpoint(uint8_t setpoint){
-	uint16_t	value;
-	uint16_t	mask = 0x01FF;
-	uint8_t		txbuf;
-	uint8_t		rxbuf[2];
-	msg_t			msg;
-
-	if(setpoint == LM75A_T_O)
-		txbuf = LM75A_O_REG;
-	else if(setpoint == LM75A_T_H)
-		txbuf = LM75A_H_REG;
-	else
-		return 255.0;
-
-	i2cAcquireBus(&I2CD1);
-	msg = i2cMasterTransmitTimeout(&I2CD1, LM75A_ADDR, &txbuf, 1, rxbuf, 2,
-			MS2ST(4));
-	i2cReleaseBus(&I2CD1);
-
-	if(msg == MSG_OK){
-		value = (rxbuf[0] << 8) + rxbuf[1];
-		value = value >> 7;
-
-		if(!(value &(1 << 8)))
-			return (float)(value * 0.5);
-		else
-			return (float)(-((((~value)&mask) + 1) * 0.5));
-	}
-	else
-		return 255.0;
+  uint16_t  value;
+  uint16_t  mask = 0x01FF;
+  uint8_t   txbuf;
+  uint8_t   rxbuf[2];
+  msg_t     msg;
+  
+  if(setpoint == LM75A_T_O)
+    txbuf = LM75A_O_REG;
+  else if(setpoint == LM75A_T_H)
+    txbuf = LM75A_H_REG;
+  else
+    return 255.0;
+  
+  i2cAcquireBus(&I2CD1);
+  msg = i2cMasterTransmitTimeout(&I2CD1, LM75A_ADDR, &txbuf, 1, rxbuf, 2,
+      MS2ST(4));
+  i2cReleaseBus(&I2CD1);
+  
+  if(msg == MSG_OK){
+    value = (rxbuf[0] << 8) + rxbuf[1];
+    value = value >> 7;
+    
+    if(!(value &(1 << 8)))
+      return (float)(value * 0.5);
+    else
+      return (float)(-((((~value)&mask) + 1) * 0.5));
+  }
+  else
+    return 255.0;
 }
 
 /**

@@ -134,11 +134,11 @@ typedef struct{
 /* Driver macros.                                                            */
 /*===========================================================================*/
 
-#define LM75A_ADDR	((uint8_t)0x48) /**< LM75A Device I2C Address           */
-#define LM75A_C_REG	((uint8_t)0x01) /**< LM75A Configuration register       */
-#define LM75A_T_REG	((uint8_t)0x00) /**< LM75A Temperature register         */
-#define LM75A_H_REG	((uint8_t)0x02) /**< LM75A Hysteresis register          */
-#define LM75A_O_REG	((uint8_t)0x03) /**< LM75A Overtemp shutdown register   */
+#define LM75A_ADDR  ((uint8_t)0x48) /**< LM75A Device I2C Address           */
+#define LM75A_C_REG ((uint8_t)0x01) /**< LM75A Configuration register       */
+#define LM75A_T_REG ((uint8_t)0x00) /**< LM75A Temperature register         */
+#define LM75A_H_REG ((uint8_t)0x02) /**< LM75A Hysteresis register          */
+#define LM75A_O_REG ((uint8_t)0x03) /**< LM75A Overtemp shutdown register   */
 
 /*===========================================================================*/
 /* External declarations.                                                    */
