@@ -44,8 +44,8 @@
  *	- Shutdown: Temperature measurement is desabled, sensor in sleep mode
  */
 typedef enum{
-	LM75A_PMN = 0x00, /**< Power Mode Normal                                  */
-	LM75A_PMS = 0x01  /**< Power Mode Shutdown                                */
+  LM75A_PMN = 0x00, /**< Power Mode Normal                                  */
+  LM75A_PMS = 0x01  /**< Power Mode Shutdown                                */
 }lm75a_om_e;        /**< Device Operation Mode                              */
 
 /**
@@ -54,8 +54,8 @@ typedef enum{
  *	- Interrupt
  */
 typedef enum{
-	LM75A_OS_CPM = 0x00,  /**< OS Comparator Pin Mode                         */
-	LM75A_OS_IPM = 0x01   /**< OS Interrupt Pin Mode                          */
+  LM75A_OS_CPM = 0x00,  /**< OS Comparator Pin Mode                         */
+  LM75A_OS_IPM = 0x01   /**< OS Interrupt Pin Mode                          */
 }lm75a_os_opm_e;        /**< Device OS Output Pin Mode                      */
 
 /**
@@ -64,19 +64,19 @@ typedef enum{
  *	- LOW
  */
 typedef enum{
-	LM75A_OS_PAL = 0x00,	/**< OS Pin Active Low															*/
-	LM75A_OS_PAH = 0x01		/**< OS Pin Actve High															*/
-}lm75a_os_pas_e;				/**< Device OS Pin Active State											*/
+  LM75A_OS_PAL = 0x00,  /**< OS Pin Active Low                              */
+  LM75A_OS_PAH = 0x01   /**< OS Pin Actve High                              */
+}lm75a_os_pas_e;        /**< Device OS Pin Active State                     */
 
 /**
  * @brief LM75A OS fault queue value
  */
 typedef enum{
-	LM75A_OS_FQV1 = 0x00,	/**< OS Fault Queue Value 1													*/
-	LM75A_OS_FQV2 = 0x01,	/**< OS Fault Queue Value 2													*/
-	LM75A_OS_FQV4 = 0x02,	/**< OS Fault Queue Value 4													*/
-	LM75A_OS_FQV6 = 0x03	/**< OS Fault Queue Value 6													*/
-}lm75a_os_fqv_e;				/**< Device OS Fault Queue Value										*/
+  LM75A_OS_FQV1 = 0x00, /**< OS Fault Queue Value 1                         */
+  LM75A_OS_FQV2 = 0x01, /**< OS Fault Queue Value 2                         */
+  LM75A_OS_FQV4 = 0x02, /**< OS Fault Queue Value 4                         */
+  LM75A_OS_FQV6 = 0x03  /**< OS Fault Queue Value 6                         */
+}lm75a_os_fqv_e;        /**< Device OS Fault Queue Value                    */
 
 /**
  * @brief LM75A Set Point
