@@ -22,7 +22,7 @@
 #define _LM75A_H_
 
 /*===========================================================================*/
-/* Include files.																														 */
+/* Include files.                                                            */
 /*===========================================================================*/
 #include <hal.h>
 
@@ -82,39 +82,39 @@ typedef enum{
  * @brief LM75A Set Point
  */
 typedef enum{
-	LM75A_T_O = 0x00,	/**< Overtemperature Set Point													*/
-	LM75A_T_H = 0x01	/**< Hysteresis Set Point																*/
-}lm75a_sp_e;				/**< Device Set Point																		*/
+  LM75A_T_O = 0x00, /**< Overtemperature Set Point                          */
+  LM75A_T_H = 0x01  /**< Hysteresis Set Point                               */
+}lm75a_sp_e;        /**< Device Set Point                                   */
 
 /**
  * @brief LM75A Thermometer subsystem configuration structure
  */
 typedef struct{
-	lm75a_om_e			om;			/**< Device Operation Mode: Normal/Shutdown				*/
-	lm75a_os_opm_e	os_opm;	/**< OS Output Pin Mode: Comparator/Interrupt			*/
-	lm75a_os_pas_e	os_oas;	/**< OS Output Active State: High/Low							*/
-	lm75a_os_fqv_e	os_fqv;	/**< OS Fault Queue Value: 1/2/4/6								*/
-	float tos;							/**< overtemperature set point: 80°c default			*/
-	float thyst;						/**< Hysteresis set point													*/
-}LM75ATherConfig;					/**< LM75A Thermometer Configuration							*/
+  lm75a_om_e      om;     /**< Device Operation Mode: Normal/Shutdown       */
+  lm75a_os_opm_e  os_opm; /**< OS Output Pin Mode: Comparator/Interrupt     */
+  lm75a_os_pas_e  os_oas; /**< OS Output Active State: High/Low             */
+  lm75a_os_fqv_e  os_fqv; /**< OS Fault Queue Value: 1/2/4/6                */
+  float           tos;    /**< overtemperature set point: 80°c default      */
+  float           thyst;  /**< Hysteresis set point                         */
+}LM75ATherConfig;					/**< LM75A Thermometer Configuration              */
 
 /**
  * @brief LM75A Driver State machine possible states.
  */
 typedef enum{
-	LM75A_UNINIT	= 0,	/**< Not initialized																	*/
-	LM75A_STOP		= 1,	/**< Stopped																					*/
-	LM75A_READY		= 2		/**< Ready																						*/
-}lm75a_state_e;				/**< LM75A State machine enumeration type							*/
+  LM75A_UNINIT	= 0,  /**< Not initialized                                  */
+  LM75A_STOP		= 1,  /**< Stopped                                          */
+  LM75A_READY		= 2   /**< Ready                                            */
+}lm75a_state_e;       /**< LM75A State machine enumeration type             */
 
 /**
  * @brief LM75A configuration structure
  */
 typedef struct{
-	I2CDriver				*i2cp;					/**< LM75A I2C Interface									*/
-	const I2CConfig			*i2ccfg;		/**< LM75A I2C Interface config						*/
-	const LM75ATherConfig	thercfg;	/**< LM75A Thermometer config							*/
-}LM75AConfig;											/**< LM75A Device Configuration						*/
+  I2CDriver             *i2cp;    /**< LM75A I2C Interface                  */
+  const I2CConfig       *i2ccfg;  /**< LM75A I2C Interface config           */
+  const LM75ATherConfig thercfg;  /**< LM75A Thermometer config             */
+}LM75AConfig;                     /**< LM75A Device Configuration           */
 
 /**
  * @brief Structure representing a LM75A driver
@@ -134,12 +134,12 @@ typedef struct{
 /* Driver macros.                                                            */
 /*===========================================================================*/
 
-#define LM75A_ADDR	((uint8_t)0x48) /**< LM75A Device I2C Address						*/
-#define LM75A_C_REG	((uint8_t)0x01) /**< LM75A Configuration register				*/
-#define LM75A_T_REG	((uint8_t)0x00)	/**< LM75A Temperature register					*/
-#define LM75A_H_REG	((uint8_t)0x02)	/**< LM75A Hysteresis register					*/
-#define LM75A_O_REG	((uint8_t)0x03)	/**< LM75A Overtemperature shutdown 
-																			register															*/
+#define LM75A_ADDR	((uint8_t)0x48) /**< LM75A Device I2C Address           */
+#define LM75A_C_REG	((uint8_t)0x01) /**< LM75A Configuration register       */
+#define LM75A_T_REG	((uint8_t)0x00) /**< LM75A Temperature register         */
+#define LM75A_H_REG	((uint8_t)0x02) /**< LM75A Hysteresis register          */
+#define LM75A_O_REG	((uint8_t)0x03) /**< LM75A Overtemperature shutdown 
+                                      register                              */
 
 /*===========================================================================*/
 /* External declarations.                                                    */
@@ -148,14 +148,14 @@ typedef struct{
 /*===========================================================================*/
 /* Functions.                   			                                 */
 /*===========================================================================*/
-float		lm75aReadTemperature (void);
-float		lm75aReadSetpoint (uint8_t setpoint);
-bool		lm75aWriteSetpoint(uint8_t setpoint, float val);
-uint8_t	lm75aReadConfiguration (void);
-msg_t		lm75aWriteConfiguration (uint8_t config);
-bool		lm75aConfigOSFaultQueue (uint8_t queueValue);
-bool		lm75aConfigOSPolarity (uint8_t state);
-bool		lm75aConfigOSOperationMode (uint8_t pinMode);
-bool		lm75aConfigPowerMode (uint8_t powerMode);
+float   lm75aReadTemperature (void);
+float   lm75aReadSetpoint (uint8_t setpoint);
+bool    lm75aWriteSetpoint(uint8_t setpoint, float val);
+uint8_t lm75aReadConfiguration (void);
+msg_t   lm75aWriteConfiguration (uint8_t config);
+bool    lm75aConfigOSFaultQueue (uint8_t queueValue);
+bool    lm75aConfigOSPolarity (uint8_t state);
+bool    lm75aConfigOSOperationMode (uint8_t pinMode);
+bool    lm75aConfigPowerMode (uint8_t powerMode);
 
 #endif // _LM75A_H_
