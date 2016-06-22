@@ -26,7 +26,7 @@
  *
  * @return  The temperature measured by the LM75A sensor.
  */
-float lm75aReadTemperature(void){
+float lm75aReadTemperature(LM75ADriver *devp){
   uint16_t  temp;
   uint16_t  mask = 0x07FF;
   uint8_t   txbuf;
@@ -35,10 +35,12 @@ float lm75aReadTemperature(void){
   
   txbuf = LM75A_T_REG;
   
-  i2cAcquireBus(&I2CD1);
-  msg = i2cMasterTransmitTimeout(&I2CD1, LM75A_ADDR, &txbuf, 1, rxbuf, 2,
+  //i2cAcquireBus(&I2CD1);
+  i2cAquireBus(i2cp);
+  msg = i2cMasterTransmitTimeout(i2cp, LM75A_ADDR, &txbuf, 1, rxbuf, 2,
       MS2ST(4));
-  i2cReleaseBus(&I2CD1);
+  //i2cReleaseBusi(&I2CD1);
+  i2cReleaseBus(i2cp);
   
   if(msg == MSG_OK){
     temp = (rxbuf[0] << 8) + rxbuf[1];
@@ -162,7 +164,7 @@ uint8_t	lm75aReadConfiguration(void){
     return config;
   else
     return msg; // TODO: be sure that the value of msg error can't correspond
-								// to a configuration value.
+                // to a configuration value.
 }
 
 /**
@@ -197,7 +199,7 @@ msg_t lm75aWriteConfiguration(uint8_t config){
  * @fn        bool lm75aConfigOSFaultQueue(uint8_t queueValue)
  * @brief     Set the fault queue value of the LM75A sensor OS pin
  *
- * @param[in] queueValue	the numbre of fault to get before to react.
+ * @param[in] queueValue  the numbre of fault to get before to react.
  * @return    The result of the configuration operation.
  *
  * @TODO      creer une enumeration lm75a_erro_e qui listera toutes les

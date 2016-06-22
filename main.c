@@ -57,6 +57,11 @@ static const I2CConfig i2cConfig = {
   FAST_DUTY_CYCLE_2,  /* I2C Duty cycle mode  */
 };
 
+static LM75ADriver LM75AD1;
+
+LM75AD1->config->i2cp = &I2CD1;
+LM75AD1->config->i2ccfg = i2cConfig;
+
 //=============================================================================
 // Functions
 //=============================================================================
@@ -134,7 +139,7 @@ int main(void){
     chThdSleepMilliseconds(5000);
   
   while (true){
-    temp = lm75aReadTemperature();
+    temp = lm75aReadTemperature(&LM75AD1);
     overtemperature = lm75aReadSetpoint(LM75A_T_O);
     thysteresis = lm75aReadSetpoint(LM75A_T_H);
     config = lm75aReadConfiguration();

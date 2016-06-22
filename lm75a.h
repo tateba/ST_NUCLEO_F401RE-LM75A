@@ -122,13 +122,13 @@ typedef struct{
 typedef struct LM75ADriver LM75ADriver;
 
 /**
- *
- *//*
-typedef struct{
+ * @brief LM75A driver.
+ */
+struct LM75ADriver{
   lm75a_state_e	state;
   LM75AConfig		config;
-}LM75ADriver;
-*/
+};
+
 
 /*===========================================================================*/
 /* Driver macros.                                                            */
@@ -147,7 +147,7 @@ typedef struct{
 /*===========================================================================*/
 /* Functions.                                                                */
 /*===========================================================================*/
-float   lm75aReadTemperature (void);
+float   lm75aReadTemperature (LM75ADriver *devp);
 float   lm75aReadSetpoint (uint8_t setpoint);
 bool    lm75aWriteSetpoint(uint8_t setpoint, float val);
 uint8_t lm75aReadConfiguration (void);
