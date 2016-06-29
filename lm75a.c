@@ -1,32 +1,79 @@
-/*
-    ChibiOS - Copyright (C) 2016 Theodore Ateba
+/**
+ *
+ * @file    lm75a.c
+ *
+ * @brief   Digital temperature driver
+ *
+ * @author  Theodore Ateba
+ *
+ * @date    26 June 2016
+ *
+ */
 
-    This file is part of ChibiOS.
-
-    ChibiOS is free software; you can redistribute it and/or modify
-    it under the terms of the GNU General Public License as published by
-    the Free Software Foundation; either version 3 of the License, or
-    (at your option) any later version.
-
-    ChibiOS is distributed in the hope that it will be useful,
-    but WITHOUT ANY WARRANTY; without even the implied warranty of
-    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-    GNU General Public License for more details.
-
-    You should have received a copy of the GNU General Public License
-    along with this program.  If not, see <http://www.gnu.org/licenses/>.
-	
-*/
-
+/*===========================================================================*/
+/* Include Libraries                                                         */
+/*===========================================================================*/
 #include "lm75a.h"
 
+/*===========================================================================*/
+/* Driver Functions                                                          */ 
+/*===========================================================================*/
+
 /**
- * @fn      float lm75aReadTemperature(void)
+ * @fn    static msg_t lm75aI2CReadRegisters(I2CDriver *i2cp, lm75a_sad_e sad,
+ *            uint8_t *reg, uint8_t *rxbuf, uint8_t lenght)
+ * @brief Read a register of the LM75A sensor
+ *
+ * @param[in] i2cp    Pointer to the i2c interface.
+ * @param[in] sad     Slave address without R/W bit.
+ * @param[in] reg     First register address to read.
+ * @param[in] rxbuf   Buffer to store the data receive by i2c bus.
+ * @param[in] lenght  Size of data to read
+ * @retuen            The result of the reading operation.
+ */
+static msg_t lm75aI2CReadRegisters(I2CDriver *i2cp, lm75a_sad_e sad,
+    uint8_t *reg, uint8_t *rxbuf, uint8_t lenght){
+  msg_t msg;
+
+  i2cAcquireBus(i2cp);
+  msg = i2cMasterTransmitTimeout(i2cp, sad, reg, 1, rxbuf, lenght, MS2ST(4));
+  i2cReleaseBus(i2cp);
+
+  return msg;
+}
+
+/**
+ * @fn    static msg_t lm75aI2CWriteRegisters( I2CDriver *i2cp, lm75a_sad_e sad,
+ *            uint8_t *txbuf, uint8_t lenght)
+ * @brief Read a register of the LM75A sensor
+ *
+ * @param[in] i2cp    Pointer to the i2c interface.
+ * @param[in] sad     Slave address without R/W bit.
+ * @param[in] txbuf   Data to write to the sensor register.
+ *                    txbuf[0] is the first register to write.
+ * @param[in] lenght  Size of data to read
+ * @retuen            The result of the reading operation.
+ */
+static msg_t lm75aI2CWriteRegisters(I2CDriver *i2cp, lm75a_sad_e sad,
+    uint8_t *txbuf, uint8_t lenght){
+  msg_t msg;
+
+  i2cAcquireBus(i2cp);
+  msg = i2cMasterTransmitTimeout(i2cp, sad, txbuf, lenght, NULL, 0, MS2ST(4));
+  i2cReleaseBus(i2cp);
+
+  return msg;
+}
+
+/**
+ * @fn      msg_t lm75aReadTemperature(I2CDriver *i2cp, float *tempp)
  * @brief   Read the LM75A temperature register.
  *
- * @return  The temperature measured by the LM75A sensor.
+ * @param[in] i2cp  The pointer to the I2C driver interface.
+ * @param[in] tempp The temperature measured by the LM75A sensor.
+ * @return          The result of the reading operation.
  */
-float lm75aReadTemperature(LM75ADriver *devp){
+msg_t lm75aReadTemperature(I2CDriver *i2cp, float *tempp){
   uint16_t  temp;
   uint16_t  mask = 0x07FF;
   uint8_t   txbuf;
@@ -34,34 +81,34 @@ float lm75aReadTemperature(LM75ADriver *devp){
   msg_t     msg;
   
   txbuf = LM75A_T_REG;
-  
-  //i2cAcquireBus(&I2CD1);
-  i2cAquireBus(i2cp);
-  msg = i2cMasterTransmitTimeout(i2cp, LM75A_ADDR, &txbuf, 1, rxbuf, 2,
-      MS2ST(4));
-  //i2cReleaseBusi(&I2CD1);
-  i2cReleaseBus(i2cp);
-  
+
+  msg = lm75aI2CReadRegisters(i2cp, LM75A_ADDR, &txbuf, rxbuf, 2);
+
   if(msg == MSG_OK){
     temp = (rxbuf[0] << 8) + rxbuf[1];
     temp = temp >> 5;
     
     if(!(temp & (1 << 10)))
-      return (float)(temp * 0.125);
+      *tempp =  (float)(temp * 0.125);
     else
-      return (float)(-((((~temp)&mask) + 1) * 0.125));
+      *tempp =  (float)(-((((~temp)&mask) + 1) * 0.125));
+    return msg;
   }
   else
-    return 255.0;
+    return msg;
 }
 
 /**
- * @fn      float lm75aReadSetpoint(uint8_t setpoint)
+ * @fn      msg_t lm75aReadSetpoint(I2CDriver *i2cp, uint8_t setpoint,
+ *                    float *tempp)
  * @brief   Read the Overtemperature shutdown threshold.
  *
- * @return  The user define high limit temperature.
+ * @param[in] i2cp      The pointer to the I2C driver interface.
+ * @param[in] setpoint  The setpoint to read (hysteresis or overtemperature)
+ * @param[in] tempp     The user define high limit temperature.
+ * @return              The result of the reading operation.
  */
-float lm75aReadSetpoint(uint8_t setpoint){
+msg_t lm75aReadSetpoint(I2CDriver *i2cp, uint8_t setpoint, float *tempp){
   uint16_t  value;
   uint16_t  mask = 0x01FF;
   uint8_t   txbuf;
@@ -73,37 +120,38 @@ float lm75aReadSetpoint(uint8_t setpoint){
   else if(setpoint == LM75A_T_H)
     txbuf = LM75A_H_REG;
   else
-    return 255.0;
-  
-  i2cAcquireBus(&I2CD1);
-  msg = i2cMasterTransmitTimeout(&I2CD1, LM75A_ADDR, &txbuf, 1, rxbuf, 2,
-      MS2ST(4));
-  i2cReleaseBus(&I2CD1);
-  
+    return MSG_SETPOINT;
+
+  msg = lm75aI2CReadRegisters(i2cp, LM75A_ADDR, &txbuf, rxbuf, 2);
+
   if(msg == MSG_OK){
     value = (rxbuf[0] << 8) + rxbuf[1];
     value = value >> 7;
     
     if(!(value &(1 << 8)))
-      return (float)(value * 0.5);
+      *tempp =  (float)(value * 0.5);
     else
-      return (float)(-((((~value)&mask) + 1) * 0.5));
+      *tempp = (float)(-((((~value)&mask) + 1) * 0.5));
+
+    return msg;
   }
   else
-    return 255.0;
+    return msg;
 }
 
 /**
- * @fn    bool lm75aWriteSetpoint(uint8_t setpoint, float val)
+ * @fn    msg_t lm75aWriteSetpoint(I2CDriver *i2cp, uint8_t setpoint, float val)
  * @brief Write the configuration value to the corresponding setpoint.
  * @note  The setpoint to configure can be:
  *          - Overtemperature setpoint
  *          - Hysteresis setpoint
  *
+ * @param[in] i2cp      The pointer to the I2C driver interface.
  * @param[in] setpoint  The setpoint to configure.
  * @param[in] val       The temperature value to set as the setpoint.
+ * @return              The result of the writing opration to the setpoint.
  */
-bool lm75aWriteSetpoint(uint8_t setpoint, float val){
+msg_t lm75aWriteSetpoint(I2CDriver *i2cp, uint8_t setpoint, float val){
   int32_t		it;
   int32_t   temp;
   uint16_t  ut;
@@ -115,8 +163,8 @@ bool lm75aWriteSetpoint(uint8_t setpoint, float val){
   else if(setpoint == LM75A_T_O)
     txbuf[0] = LM75A_O_REG;
   else
-    return false; /* TODO: return a message number corresponding
-                     to bad setpoint selection */
+    return MSG_SETPOINT;
+
   temp = (int32_t)(val * 2);
   
   if(setpoint > 0.0){
@@ -132,55 +180,52 @@ bool lm75aWriteSetpoint(uint8_t setpoint, float val){
     txbuf[1] = ut;
     txbuf[2] = ut >> 0x1;
   }
-  i2cAcquireBus(&I2CD1);
-  msg = i2cMasterTransmitTimeout(&I2CD1, LM75A_ADDR, txbuf, 3, NULL, 0,
-      MS2ST(4));
-  i2cReleaseBus(&I2CD1);
-  if(msg == MSG_OK)
-    return true;
-  else
-    return false;
+
+  msg = lm75aI2CWriteRegisters(i2cp, LM75A_ADDR, txbuf, 3); 
+  
+  return msg;
 }
 
 /**
- * @fn      uint8_t lm75aReadConfiguration(void)
- * @brief   Read the LM75A sensor configuration register
+ * @fn    msg_t lm75aReadConfiguration(I2CDriver *i2cp, uint8_t *configp)
+ * @brief Read the LM75A sensor configuration register
  *
- * @return  config  The configuration read from the sensor
+ * @param[in] i2cp    The pointer to the I2C driver interface.
+ * @param[in] config  The configuration read from the LM75A sensor.
+ * @return    config  The result of the reading operation.
  */
-uint8_t	lm75aReadConfiguration(void){
+msg_t	lm75aReadConfiguration(I2CDriver *i2cp, uint8_t *configp){
   uint8_t config;
   uint8_t txbuf;
   msg_t   msg;
   
   txbuf = LM75A_C_REG;
   
-  i2cAcquireBus(&I2CD1);
-  msg = i2cMasterTransmitTimeout(&I2CD1, LM75A_ADDR, &txbuf, 1, &config, 1,
-      MS2ST(4));
-  i2cReleaseBus(&I2CD1);
-  
-  if(msg == MSG_OK)
-    return config;
+  msg = lm75aI2CReadRegisters(i2cp, LM75A_ADDR, &txbuf, &config, 1);
+
+  if(msg == MSG_OK){
+    *configp = config;
+    return msg;
+  }
   else
-    return msg; // TODO: be sure that the value of msg error can't correspond
-                // to a configuration value.
+    return msg;
 }
 
 /**
- * @fn        smg_t lm75aWriteConfiguration(uint8_t config)
- * @brief     Write the LM75A sensor configuration
- * @note      This function help to write diver configuration such as:
- *              - config[7:5] Reserved for manufacturer's used.
- *              - config[4:3] OS fault queue programming.
- *              - config[2]   OS polarity selection.
- *              - config[1]   OS operation mode selection.
- *              - config[0]   Device operation mode selection.
+ * @fn    smg_t lm75aWriteConfiguration(I2CDriver *i2cp, uint8_t config)
+ * @brief Write the LM75A sensor configuration
+ * @note  This function help to write diver configuration such as:
+ *          - config[7:5] Reserved for manufacturer's used.
+ *          - config[4:3] OS fault queue programming.
+ *          - config[2]   OS polarity selection.
+ *          - config[1]   OS operation mode selection.
+ *          - config[0]   Device operation mode selection.
  *
- * @param[in] config  the configuration to write on the sensor.
- * @return    msg     the writing operation result.
+ * @param[in] i2cp    The pointer to the I2C driver interface
+ * @param[in] config  The configuration to write on the sensor.
+ * @return    msg     The writing operation result.
  */
-msg_t lm75aWriteConfiguration(uint8_t config){
+msg_t lm75aWriteConfiguration(I2CDriver *i2cp, uint8_t config){
   uint8_t txbuf[2];
   uint8_t rxbuf[2];
   msg_t   msg;
@@ -188,32 +233,33 @@ msg_t lm75aWriteConfiguration(uint8_t config){
   txbuf[0] = LM75A_C_REG;
   txbuf[1] = config;
   
-  i2cAcquireBus(&I2CD1);
-  msg = i2cMasterTransmitTimeout(&I2CD1, LM75A_ADDR, txbuf, 2, rxbuf, 0,
+  i2cAcquireBus(i2cp);
+  msg = i2cMasterTransmitTimeout(i2cp, LM75A_ADDR, txbuf, 2, rxbuf, 0,
       MS2ST(4));
-  i2cReleaseBus(&I2CD1);
+  i2cReleaseBus(i2cp);
+
   return msg;
 }
 
 /**
- * @fn        bool lm75aConfigOSFaultQueue(uint8_t queueValue)
- * @brief     Set the fault queue value of the LM75A sensor OS pin
+ * @fn    msg_t lm75aConfigOSFaultQueue(uint8_t queueValue)
+ * @brief Set the fault queue value of the LM75A sensor OS pin
  *
+ * @param[in] i2cp        The pointer of the I2C driver interface.
  * @param[in] queueValue  the numbre of fault to get before to react.
- * @return    The result of the configuration operation.
+ * @return                The result of the configuration operation.
  *
- * @TODO      creer une enumeration lm75a_erro_e qui listera toutes les
- *            erreurs que l'on peut avoir lors de l'utilisation de ce
- *            capteur. Changer le type de retour pour renvoyer une
- *            erreur correspondante en fonction ce ce qui s'est produit.
  */
-bool lm75aConfigOSFaultQueue(uint8_t queueValue){
+msg_t lm75aConfigOSFaultQueue(I2CDriver *i2cp, uint8_t queueValue){
   uint8_t config;
   uint8_t newConfig;
   msg_t   msg;
   
-  config = lm75aReadConfiguration();
+  msg = lm75aReadConfiguration(i2cp, &config);
   
+  if(msg != MSG_OK)
+    return msg;
+
   if(queueValue == LM75A_OS_FQV1){
     newConfig = config & ~(1 << 3);
     newConfig = newConfig & ~(1 << 4);
@@ -231,103 +277,105 @@ bool lm75aConfigOSFaultQueue(uint8_t queueValue){
     newConfig = newConfig | (1 << 4);
   }
   else
-    return false; // TODO: return an enumeration for wrong queue_value
+    return MSG_OSFAULTQUEUE;
   
-  msg = lm75aWriteConfiguration(newConfig);
+  msg = lm75aWriteConfiguration(i2cp, newConfig);
   
-  if(msg == MSG_OK)
-    return true;
-  else
-    return false;
+  return msg;
 }
 
 /**
- * @fn        bool lm75aConfigOSPolarity(uint8_t state)
- * @brief     Set the LM75A sensor OS output pin active state.
- * @note      The OS output pin can have one of the two state as active state:
- *              - LOW if state is egal to LM75A_OS_PAL.
- *              - HIGH if state is egal to LM75A_OS_PAH.
+ * @fn    msg_t lm75aConfigOSPolarity(uint8_t state)
+ * @brief Set the LM75A sensor OS output pin active state.
+ * @note  The OS output pin can have one of the two state as active state:
+ *          - LOW if state is egal to LM75A_OS_PAL.
+ *          - HIGH if state is egal to LM75A_OS_PAH.
  *
+ * @param[in] i2cp  The pointer of the I2C driver interface.
  * @param[in] state The active state to configure for the OS output pin.
  * @return    The result of the configuration operation
  */
-bool lm75aConfigOSPolarity(uint8_t state){
+msg_t lm75aConfigOSPolarity(I2CDriver *i2cp, uint8_t state){
   uint8_t config;
   uint8_t newConfig;
   msg_t   msg;
   
-  config = lm75aReadConfiguration();
+  msg = lm75aReadConfiguration(i2cp, &config);
   
+  if(msg != MSG_OK)
+    return msg;
+
   if(state == LM75A_OS_PAL)
     newConfig = config & ~(1 << 2);
   else if(state == LM75A_OS_PAH)
     newConfig = config | (1 << 2);
   else
-    return false;
+    return MSG_OSPOLARITY;;
   
-  msg = lm75aWriteConfiguration(newConfig);
+  msg = lm75aWriteConfiguration(i2cp, newConfig);
   
-  if(msg == MSG_OK)
-    return true;
-  else
-    return false;
+  return msg;
 }
 
 /**
- * @fn        bool lm75aConfigOSOperationMode(uint8_t pinMode)
- * @brief     Control the LM75A sensor power mode.
- * @note      There are two operation mode for the OS output pin:
- *              - Comparator mode ==> pinMode == LM75A_OS_CPM.
- *              - Interrupt  mode ==> pinMode == LM75A_OS_IPM.
+ * @fn    msg_t lm75aConfigOSOperationMode(I2CDriver *i2cp, uint8_t pinMode)
+ * @brief Control the LM75A sensor power mode.
+ * @note  There are two operation mode for the OS output pin:
+ *          - Comparator mode ==> pinMode == LM75A_OS_CPM.
+ *          - Interrupt  mode ==> pinMode == LM75A_OS_IPM.
  *
+ * @param[in] i2cp    The pointer of the I2C driver interface.
  * @param[in] pinMode	The mode in wich the pin must be configure.
+ * @return            The result of the OS operation mode.
  */
-bool lm75aConfigOSOperationMode(uint8_t pinMode){
+msg_t lm75aConfigOSOperationMode(I2CDriver *i2cp, uint8_t pinMode){
   uint8_t config;
   uint8_t newConfig;
   msg_t   msg;
   
-  config = lm75aReadConfiguration();
+  msg = lm75aReadConfiguration(i2cp, &config);
+
+  if(msg != MSG_OK)
+    return msg;
   
   if(pinMode == LM75A_OS_CPM)
     newConfig = config & ~(1 << 1);
   else if(pinMode == LM75A_OS_IPM)
     newConfig = config | (1 << 1);
   else
-    return false;
+    return MSG_OPERATIONMODE;
   
-  msg = lm75aWriteConfiguration(newConfig);
+  msg = lm75aWriteConfiguration(i2cp, newConfig);
   
-  if(msg == MSG_OK)
-    return true;
-  else
-    return false;
+  return msg;
 }
 
 /**
- * @fn        bool lm75aConfigPowerMode(uint8_t powerMode)
- * @brief     Control the LM75A senseor power mode
+ * @fn    msg_t lm75aConfigPowerMode(I2CDriver *i2cp, uint8_t powerMode)
+ * @brief Control the LM75A senseor power mode
  *
+ * @param[in] i2cp      The pointer of the I2C driver interface.
  * @param[in] powerMode The power mode to configure.
+ * @return              The result of the power mode configuration.
  */
-bool lm75aConfigPowerMode(uint8_t powerMode){
+msg_t lm75aConfigPowerMode(I2CDriver *i2cp, uint8_t powerMode){
   uint8_t config;
   uint8_t newConfig;
   msg_t   msg;
   
-  config = lm75aReadConfiguration();
+  msg = lm75aReadConfiguration(i2cp, &config);
   
+  if(msg != MSG_OK)
+    return msg;
+
   if(powerMode == LM75A_PMN)
     newConfig = config & ~(1 << 0);
   else if(powerMode == LM75A_PMS)
     newConfig = config | (1 << 0);
   else
-    return false;
+    return MSG_POWERMODE;
   
-  msg = lm75aWriteConfiguration(newConfig);
+  msg = lm75aWriteConfiguration(i2cp, newConfig);
   
-  if(msg == MSG_OK)
-    return true;
-  else
-    return false;
+  return msg;
 }

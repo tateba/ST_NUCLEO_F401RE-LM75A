@@ -1,19 +1,3 @@
-/*
-    ChibiOS - Copyright (C) 2006..2016 Giovanni Di Sirio
-
-    Licensed under the Apache License, Version 2.0 (the "License");
-    you may not use this file except in compliance with the License.
-    You may obtain a copy of the License at
-
-        http://www.apache.org/licenses/LICENSE-2.0
-
-    Unless required by applicable law or agreed to in writing, software
-    distributed under the License is distributed on an "AS IS" BASIS,
-    WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
-    See the License for the specific language governing permissions and
-    limitations under the License.
-*/
-
 /**
  *
  * @file    main.c
@@ -29,18 +13,18 @@
  *
  */
 
-//=============================================================================
-// Include Files
-//=============================================================================
+/*==========================================================================*/
+/* Includes Files                                                           */
+/*==========================================================================*/
 #include <stdlib.h>
 #include "ch.h"
 #include "hal.h"
 #include "chprintf.h"
 #include "lm75a.h"
 
-//=============================================================================
-// Global variables, I2C TX and RX buffers, I2C and Serial Configurations
-//=============================================================================
+/*==========================================================================*/
+/* Global variables, I2C and Serial Configurations                          */
+/*==========================================================================*/
 float   temp;
 float   overtemperature;
 float   thysteresis;
@@ -57,14 +41,11 @@ static const I2CConfig i2cConfig = {
   FAST_DUTY_CYCLE_2,  /* I2C Duty cycle mode  */
 };
 
-static LM75ADriver LM75AD1;
+//static LM75ADriver LM75AD1;
 
-LM75AD1->config->i2cp = &I2CD1;
-LM75AD1->config->i2ccfg = i2cConfig;
-
-//=============================================================================
-// Functions
-//=============================================================================
+/*==========================================================================*/
+/* Functions.                                                               */
+/*==========================================================================*/
 
 // Alife Thread, Blink the LED
 static THD_WORKING_AREA(waLedGreenThread, 128);
@@ -83,9 +64,9 @@ static THD_FUNCTION(BlinkThread, arg){
  * @brief Application entry point.
  */
 int main(void){
-  bool delay = false;
   float hyst = -5.0;
   float over = -10.0;
+  msg_t msg;
 
   /*
    * System initializations.
@@ -102,65 +83,82 @@ int main(void){
 	
   /* Configure the I2C Driver and i2C Pins */
   i2cStart(&I2CD1, &i2cConfig);
-  palSetPadMode(GPIOB, 8, PAL_MODE_ALTERNATE(4) | PAL_STM32_OTYPE_OPENDRAIN); // SCL
-  palSetPadMode(GPIOB, 9, PAL_MODE_ALTERNATE(4) | PAL_STM32_OTYPE_OPENDRAIN); // SDA
+  palSetPadMode(GPIOB, 8, PAL_MODE_ALTERNATE(4) |
+      PAL_STM32_OTYPE_OPENDRAIN); // SCL
+  palSetPadMode(GPIOB, 9, PAL_MODE_ALTERNATE(4) |
+      PAL_STM32_OTYPE_OPENDRAIN); // SDA
   
   /* Create the thread for the LED. */
-  chThdCreateStatic(waLedGreenThread, sizeof(waLedGreenThread), LOWPRIO, BlinkThread, NULL);
+  chThdCreateStatic(waLedGreenThread, sizeof(waLedGreenThread),
+      LOWPRIO, BlinkThread, NULL);
   
-  if(!lm75aConfigPowerMode(LM75A_PMN)){
-    chprintf(chp, "\n\r LM75A Power Mode Configuration error!");
-    delay = true;
-  }
+  chprintf(chp, "\n\r LM75A configurations started...");
   
-  if(!lm75aConfigOSOperationMode(LM75A_OS_IPM)){
-    chprintf(chp, "\n\r LM75A OS Operation Mode configuration erro!");
-    delay = true;
-  }
+  msg = lm75aConfigPowerMode(&I2CD1, LM75A_PMN);
+  if(msg != MSG_OK)
+    chprintf(chp, "\n\r   Power Mode Configuration error!");
   
-  if(!lm75aConfigOSFaultQueue(LM75A_OS_FQV6)){
-    chprintf(chp, "\n\r LM75A OS Fault queue programming configuration error!");
-    delay = true;
-  }
+  msg = lm75aConfigOSOperationMode(&I2CD1, LM75A_OS_IPM);
+  if(msg != MSG_OK)
+    chprintf(chp, "\n\r   OS Operation Mode configuration erro!");
   
-  if(!lm75aConfigOSPolarity(LM75A_OS_PAH)){
-    chprintf(chp, "\n\r LM75A OS pin polarity Configuration error!");
-    delay = true;
-  }
+  msg = lm75aConfigOSFaultQueue(&I2CD1, LM75A_OS_FQV6);
+  if(msg != MSG_OK)
+    chprintf(chp, "\n\r   OS Fault queue programming configuration error!");
   
-  if(!lm75aWriteSetpoint(LM75A_T_H, hyst)){
-    chprintf(chp, "\n\r LM75A Setpoint Configuration error!");
-    delay = true;
-    chprintf(chp, "\n\r return false");
-	}
-  else
-    chprintf(chp, "\n\r return true");
-  if(delay)
-    chThdSleepMilliseconds(5000);
+  msg = lm75aConfigOSPolarity(&I2CD1, LM75A_OS_PAH);
+  if(msg != MSG_OK)
+    chprintf(chp, "\n\r   OS pin polarity Configuration error!");
   
+  msg = lm75aWriteSetpoint(&I2CD1, LM75A_T_H, hyst);
+  if(msg != MSG_OK)
+    chprintf(chp, "\n\r   Setpoint Configuration error!");
+  
+  chprintf(chp, "\n\r LM75A configurations ended.");
+  chThdSleepMilliseconds(5000);
+
   while (true){
-    temp = lm75aReadTemperature(&LM75AD1);
-    overtemperature = lm75aReadSetpoint(LM75A_T_O);
-    thysteresis = lm75aReadSetpoint(LM75A_T_H);
-    config = lm75aReadConfiguration();
     
-    if(!lm75aWriteSetpoint(LM75A_T_H, hyst)){
-      chprintf(chp, "\n\r LM75A Hysteresis Configuration error!");
-    }
+    chprintf(chp, "\n\r LM75A measurements:");
     
-    if(!lm75aWriteSetpoint(LM75A_T_O, over)){
-      chprintf(chp, "\n\r LM75A Overtemperature Configuration error!");
-    }
+    /* Try to read temperature from the LM75A */
+    msg = lm75aReadTemperature(&I2CD1, &temp);
+    if(msg == MSG_OK)
+      chprintf(chp, "\n\r   Temperature: %.3f °c.", temp);
+    else
+      chprintf(chp, "\n\r   Temperature reading error: msg = %d.", msg);
+    /* Try to read overtemperature setpoint from the LM75A */
+    msg = lm75aReadSetpoint(&I2CD1, LM75A_T_O, &overtemperature);
+    if(msg == MSG_OK)
+      chprintf(chp, "\n\r   Overtemperature: %.3f °c.", overtemperature);
+    else
+      chprintf(chp, "\n\r   Overtemperature reading error: msg = %d.", msg);
     
-    //thysteresis = lm75aReadSetpoint(LM75A_T_H);
+    /* Try to read Hysteresis temperature from the LM75A */
+    msg = lm75aReadSetpoint(&I2CD1, LM75A_T_H, &thysteresis);
+    if(msg == MSG_OK)
+      chprintf(chp, "\n\r   Thysteresis: %.3f °c.", thysteresis);
+    else
+      chprintf(chp, "\n\r   Hysteresys reading error: msg = %d.", msg);
     
-    chprintf(chp, "\n\r LM75A measurement:");
-    chprintf(chp, "\n\r   Temperature: %.3f °c", temp);
-    chprintf(chp, "\n\r   Overtemperature: %.3f °c", overtemperature);
-    chprintf(chp, "\n\r   Thysteresis: %.3f °c", thysteresis);
-    //chprintf(chp, "\n\r   Hyst config: %.3f °c", hyst);
-    chprintf(chp, "\n\r   Configuration register: %x\n\r", config);
+    /* Try to read LM75A configuration */
+    msg = lm75aReadConfiguration(&I2CD1, &config);
+    if(msg == MSG_OK)
+      chprintf(chp, "\n\r   Configuration register value: %x.\n\r", config);
+    else
+      chprintf(chp, "\n\r   Configuration reading error: msg = %d.", msg);
+
+    /* Try to configure the Hysteresis setpoint */
+    msg = lm75aWriteSetpoint(&I2CD1, LM75A_T_H, hyst);
+    if(msg != MSG_OK)
+      chprintf(chp, "\n\r   Hysteresis writting erro: msg = %d.", msg);
     
+    /* Try to configure the overtemperature setpoint */
+    msg = lm75aWriteSetpoint(&I2CD1, LM75A_T_O, over);
+    if(msg != MSG_OK)
+      chprintf(chp, "\n\r   Overtemperature writting error: msg = %d.", msg);
+    
+    /* Change the hysteresis and overtemperature setpoint for next time */  
     hyst += 1;
     over += 2;
     
