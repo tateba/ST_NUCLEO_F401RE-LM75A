@@ -115,8 +115,9 @@ CSRC = $(STARTUPSRC) \
        $(BOARDSRC) \
 	   $(BMP085SRC) \
        $(STREAMSSRC) \
-       main.c \
-       lm75a.c
+       i2c.c \
+       lm75a.c \
+       main.c
 
 # C++ sources that can be compiled in ARM or THUMB mode depending on the global
 # setting.

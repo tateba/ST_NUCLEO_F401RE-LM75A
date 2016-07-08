@@ -20,52 +20,6 @@
 /*===========================================================================*/
 
 /**
- * @fn    static msg_t lm75aI2CReadRegisters(I2CDriver *i2cp, lm75a_sad_e sad,
- *            uint8_t *reg, uint8_t *rxbuf, uint8_t lenght)
- * @brief Read a register of the LM75A sensor
- *
- * @param[in] i2cp    Pointer to the i2c interface.
- * @param[in] sad     Slave address without R/W bit.
- * @param[in] reg     First register address to read.
- * @param[in] rxbuf   Buffer to store the data receive by i2c bus.
- * @param[in] lenght  Size of data to read
- * @retuen            The result of the reading operation.
- */
-static msg_t lm75aI2CReadRegisters(I2CDriver *i2cp, lm75a_sad_e sad,
-    uint8_t *reg, uint8_t *rxbuf, uint8_t lenght){
-  msg_t msg;
-
-  i2cAcquireBus(i2cp);
-  msg = i2cMasterTransmitTimeout(i2cp, sad, reg, 1, rxbuf, lenght, MS2ST(4));
-  i2cReleaseBus(i2cp);
-
-  return msg;
-}
-
-/**
- * @fn    static msg_t lm75aI2CWriteRegisters( I2CDriver *i2cp, lm75a_sad_e sad,
- *            uint8_t *txbuf, uint8_t lenght)
- * @brief Read a register of the LM75A sensor
- *
- * @param[in] i2cp    Pointer to the i2c interface.
- * @param[in] sad     Slave address without R/W bit.
- * @param[in] txbuf   Data to write to the sensor register.
- *                    txbuf[0] is the first register to write.
- * @param[in] lenght  Size of data to read
- * @retuen            The result of the reading operation.
- */
-static msg_t lm75aI2CWriteRegisters(I2CDriver *i2cp, lm75a_sad_e sad,
-    uint8_t *txbuf, uint8_t lenght){
-  msg_t msg;
-
-  i2cAcquireBus(i2cp);
-  msg = i2cMasterTransmitTimeout(i2cp, sad, txbuf, lenght, NULL, 0, MS2ST(4));
-  i2cReleaseBus(i2cp);
-
-  return msg;
-}
-
-/**
  * @fn      msg_t lm75aReadTemperature(I2CDriver *i2cp, float *tempp)
  * @brief   Read the LM75A temperature register.
  *
@@ -82,7 +36,7 @@ msg_t lm75aReadTemperature(I2CDriver *i2cp, float *tempp){
   
   txbuf = LM75A_T_REG;
 
-  msg = lm75aI2CReadRegisters(i2cp, LM75A_ADDR, &txbuf, rxbuf, 2);
+  msg = i2cReadRegisters(i2cp, LM75A_ADDR, &txbuf, rxbuf, 2);
 
   if(msg == MSG_OK){
     temp = (rxbuf[0] << 8) + rxbuf[1];
@@ -122,7 +76,7 @@ msg_t lm75aReadSetpoint(I2CDriver *i2cp, uint8_t setpoint, float *tempp){
   else
     return MSG_SETPOINT;
 
-  msg = lm75aI2CReadRegisters(i2cp, LM75A_ADDR, &txbuf, rxbuf, 2);
+  msg = i2cReadRegisters(i2cp, LM75A_ADDR, &txbuf, rxbuf, 2);
 
   if(msg == MSG_OK){
     value = (rxbuf[0] << 8) + rxbuf[1];
@@ -181,7 +135,7 @@ msg_t lm75aWriteSetpoint(I2CDriver *i2cp, uint8_t setpoint, float val){
     txbuf[2] = ut >> 0x1;
   }
 
-  msg = lm75aI2CWriteRegisters(i2cp, LM75A_ADDR, txbuf, 3); 
+  msg = i2cWriteRegisters(i2cp, LM75A_ADDR, txbuf, 3); 
   
   return msg;
 }
@@ -201,7 +155,7 @@ msg_t	lm75aReadConfiguration(I2CDriver *i2cp, uint8_t *configp){
   
   txbuf = LM75A_C_REG;
   
-  msg = lm75aI2CReadRegisters(i2cp, LM75A_ADDR, &txbuf, &config, 1);
+  msg = i2cReadRegisters(i2cp, LM75A_ADDR, &txbuf, &config, 1);
 
   if(msg == MSG_OK){
     *configp = config;
@@ -227,16 +181,14 @@ msg_t	lm75aReadConfiguration(I2CDriver *i2cp, uint8_t *configp){
  */
 msg_t lm75aWriteConfiguration(I2CDriver *i2cp, uint8_t config){
   uint8_t txbuf[2];
-  uint8_t rxbuf[2];
   msg_t   msg;
   
   txbuf[0] = LM75A_C_REG;
   txbuf[1] = config;
   
-  i2cAcquireBus(i2cp);
-  msg = i2cMasterTransmitTimeout(i2cp, LM75A_ADDR, txbuf, 2, rxbuf, 0,
-      MS2ST(4));
-  i2cReleaseBus(i2cp);
+ // i2cAcquireBus(i2cp);
+  msg = i2cWriteRegisters(i2cp, LM75A_ADDR, txbuf, 2);
+ // i2cReleaseBus(i2cp);
 
   return msg;
 }
